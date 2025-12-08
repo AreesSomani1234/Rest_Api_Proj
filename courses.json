@@ -1,0 +1,83 @@
+[
+  {
+    "id": 1,
+    "code": "ICS4U",
+    "name": "Grade 12 CS",
+    "teacherId": 1,
+    "semester": "Winter",
+    "room": "105",
+    "schedule": "Tue/Thu 9 AM"
+  },
+  {
+    "id": 2,
+    "code": "MHF4U",
+    "name": "Advanced Functions",
+    "teacherId": 2,
+    "semester": "1",
+    "room": "214",
+    "schedule": "Day 1 PM"
+  },
+  {
+    "id": 3,
+    "code": "ENG3U",
+    "name": "English",
+    "teacherId": 3,
+    "semester": "2",
+    "room": "108",
+    "schedule": "Day 2 AM"
+  },
+  {
+    "id": 4,
+    "code": "SBI3U",
+    "name": "Biology",
+    "teacherId": 4,
+    "semester": "2",
+    "room": "Lab 2",
+    "schedule": "Day 2 PM"
+  },
+  {
+    "id": 5,
+    "code": "SPH3U",
+    "name": "Physics",
+    "teacherId": 4,
+    "semester": "1",
+    "room": "Lab 1",
+    "schedule": "Day 1 AM"
+  },
+  {
+    "id": 6,
+    "code": "CHA3U",
+    "name": "American History",
+    "teacherId": 5,
+    "semester": "2",
+    "room": "110",
+    "schedule": "Mon/Wed PM"
+  },
+  {
+    "id": 7,
+    "code": "FSF3U",
+    "name": "Core French",
+    "teacherId": 6,
+    "semester": "1",
+    "room": "202",
+    "schedule": "Tue/Thu AM"
+  },
+  {
+    "id": 8,
+    "code": "SNC2D",
+    "name": "Science",
+    "teacherId": 4,
+    "semester": "Full Year",
+    "room": "Lab 2",
+    "schedule": "Everyday AM"
+  },
+  {
+    "id": 9,
+    "code": "ICS4U",
+    "name": "Computer Science",
+    "teacherId": 1,
+    "semester": "Fall",
+    "room": "104",
+    "schedule": "Mon/Wed 10 AM"
+  }
+]
