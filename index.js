@@ -477,7 +477,7 @@ const Teacher = mongoose.model(
   "Teacher",
   new mongoose.Schema(
     {
-      id: { type: Number, required: true, unique: true },
+      
       firstName: { type: String, required: true },
       lastName: { type: String, required: true },
       email: { type: String, required: true },
@@ -493,7 +493,7 @@ const Course = mongoose.model(
   "Course",
   new mongoose.Schema(
     {
-      id: { type: Number, required: true, unique: true },
+      // id: { type: Number, required: true, unique: true },
       code: { type: String, required: true },
       name: { type: String, required: true },
       teacherId: { type: Number, required: true },
@@ -510,7 +510,7 @@ const Student = mongoose.model(
   "Student",
   new mongoose.Schema(
     {
-      id: { type: Number, required: true, unique: true },
+      // id: { type: Number, required: true, unique: true },
       firstName: { type: String, required: true },
       lastName: { type: String, required: true },
       grade: { type: Number, required: true },
@@ -526,7 +526,7 @@ const Test = mongoose.model(
   "Test",
   new mongoose.Schema(
     {
-      id: { type: Number, required: true, unique: true },
+      // id: { type: Number, required: true, unique: true },
       studentId: { type: Number, required: true },
       courseId: { type: Number, required: true },
       testName: { type: String, required: true },
@@ -552,7 +552,7 @@ app.get("/teachers", async (req, res) => {
 });
 
 app.get("/teachers/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = req.params.id;
   const teacher = await Teacher.findOne({ id });
   if (!teacher) return res.status(404).json({ error: "Teacher not found" });
   res.json(teacher);
@@ -570,7 +570,7 @@ app.post("/teachers", async (req, res) => {
 });
 
 app.put("/teachers/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = req.params.id;
 
   // prevent "empty update"
   const allowed = ["firstName", "lastName", "email", "department", "room"];
@@ -583,7 +583,7 @@ app.put("/teachers/:id", async (req, res) => {
 });
 
 app.delete("/teachers/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = (req.params.id);
 
   const hasCourse = await Course.exists({ teacherId: id });
   if (hasCourse) {
@@ -602,7 +602,7 @@ app.get("/courses", async (req, res) => {
 });
 
 app.get("/courses/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = (req.params.id);
   const course = await Course.findOne({ id });
   if (!course) return res.status(404).json({ error: "Course not found" });
   res.json(course);
@@ -614,7 +614,7 @@ app.post("/courses", async (req, res) => {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  const tId = Number(teacherId);
+  const tId = (teacherId);
   const teacherExists = await Teacher.exists({ id: tId });
   if (!teacherExists) return res.status(400).json({ error: "teacherId does not match a teacher" });
 
@@ -633,11 +633,11 @@ app.post("/courses", async (req, res) => {
 });
 
 app.put("/courses/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = (req.params.id);
 
   // if teacherId changes, validate it
   if (req.body.teacherId !== undefined) {
-    const tId = Number(req.body.teacherId);
+    const tId = (req.body.teacherId);
     const teacherExists = await Teacher.exists({ id: tId });
     if (!teacherExists) return res.status(400).json({ error: "teacherId does not match a teacher" });
     req.body.teacherId = tId;
@@ -653,7 +653,7 @@ app.put("/courses/:id", async (req, res) => {
 });
 
 app.delete("/courses/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = (req.params.id);
 
   const hasTests = await Test.exists({ courseId: id });
   if (hasTests) return res.status(400).json({ error: "Cannot delete course that has tests" });
@@ -670,7 +670,7 @@ app.get("/students", async (req, res) => {
 });
 
 app.get("/students/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = (req.params.id);
   const student = await Student.findOne({ id });
   if (!student) return res.status(404).json({ error: "Student not found" });
   res.json(student);
@@ -696,7 +696,7 @@ app.post("/students", async (req, res) => {
 });
 
 app.put("/students/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = (req.params.id);
 
   const allowed = ["firstName", "lastName", "grade", "studentNumber", "homeroom"];
   const hasAllowed = Object.keys(req.body).some((k) => allowed.includes(k));
@@ -710,7 +710,7 @@ app.put("/students/:id", async (req, res) => {
 });
 
 app.delete("/students/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = (req.params.id);
 
   const hasTests = await Test.exists({ studentId: id });
   if (hasTests) return res.status(400).json({ error: "Cannot delete student that still has tests" });
@@ -727,7 +727,7 @@ app.get("/tests", async (req, res) => {
 });
 
 app.get("/tests/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = (req.params.id);
   const test = await Test.findOne({ id });
   if (!test) return res.status(404).json({ error: "Test not found" });
   res.json(test);
@@ -747,8 +747,8 @@ app.post("/tests", async (req, res) => {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  const sId = Number(studentId);
-  const cId = Number(courseId);
+  const sId = (studentId);
+  const cId = (courseId);
 
   const studentExists = await Student.exists({ id: sId });
   const courseExists = await Course.exists({ id: cId });
@@ -772,21 +772,21 @@ app.post("/tests", async (req, res) => {
 });
 
 app.put("/tests/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = (req.params.id);
 
   const allowed = ["studentId", "courseId", "testName", "date", "mark", "outOf", "weight"];
   const hasAllowed = Object.keys(req.body).some((k) => allowed.includes(k));
   if (!hasAllowed) return res.status(400).json({ error: "No valid fields to update" });
 
   if (req.body.studentId !== undefined) {
-    const sId = Number(req.body.studentId);
+    const sId = (req.body.studentId);
     const exists = await Student.exists({ id: sId });
     if (!exists) return res.status(400).json({ error: "studentId does not match a student" });
     req.body.studentId = sId;
   }
 
   if (req.body.courseId !== undefined) {
-    const cId = Number(req.body.courseId);
+    const cId = (req.body.courseId);
     const exists = await Course.exists({ id: cId });
     if (!exists) return res.status(400).json({ error: "courseId does not match a course" });
     req.body.courseId = cId;
@@ -802,7 +802,7 @@ app.put("/tests/:id", async (req, res) => {
 });
 
 app.delete("/tests/:id", async (req, res) => {
-  const id = Number(req.params.id);
+  const id = (req.params.id);
 
   const deleted = await Test.findOneAndDelete({ id });
   if (!deleted) return res.status(404).json({ error: "Test not found" });
@@ -814,7 +814,7 @@ app.delete("/tests/:id", async (req, res) => {
 
 // All tests for a student
 app.get("/students/:id/tests", async (req, res) => {
-  const studentId = Number(req.params.id);
+  const studentId = (req.params.id);
 
   const studentExists = await Student.exists({ id: studentId });
   if (!studentExists) return res.status(404).json({ error: "Student not found" });
@@ -825,7 +825,7 @@ app.get("/students/:id/tests", async (req, res) => {
 
 // All tests for a course
 app.get("/courses/:id/tests", async (req, res) => {
-  const courseId = Number(req.params.id);
+  const courseId = (req.params.id);
 
   const courseExists = await Course.exists({ id: courseId });
   if (!courseExists) return res.status(404).json({ error: "Course not found" });
@@ -836,7 +836,7 @@ app.get("/courses/:id/tests", async (req, res) => {
 
 // Average for a student (simple mean of test percentages)
 app.get("/students/:id/average", async (req, res) => {
-  const studentId = Number(req.params.id);
+  const studentId = (req.params.id);
 
   const studentExists = await Student.exists({ id: studentId });
   if (!studentExists) return res.status(404).json({ error: "Student not found" });
@@ -859,7 +859,7 @@ app.get("/students/:id/average", async (req, res) => {
 
 // Average for a course (simple mean of test percentages)
 app.get("/courses/:id/average", async (req, res) => {
-  const courseId = Number(req.params.id);
+  const courseId = (req.params.id);
 
   const courseExists = await Course.exists({ id: courseId });
   if (!courseExists) return res.status(404).json({ error: "Course not found" });
