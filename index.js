@@ -552,12 +552,25 @@ app.get("/teachers", async (req, res) => {
 });
 
 app.get("/teachers/:id", async (req, res) => {
-  const id = req.params.id;
-  const teacher = await Teacher.findOne({ id });
-  if (!teacher) return res.status(404).json({ error: "Teacher not found" });
-  res.json(teacher);
-});
+  try {
+    const { id } = req.params;
 
+    // must be a valid 24-hex ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid teacher _id" });
+    }
+
+    const teacher = await Teacher.findById(id); // <-- KEY CHANGE
+
+    if (!teacher) {
+      return res.status(404).json({ error: "Teacher not found" });
+    }
+
+    return res.json(teacher);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
 app.post("/teachers", async (req, res) => {
   const { firstName, lastName, email, department, room } = req.body;
   if (!firstName || !lastName || !email || !department || !room) {
