@@ -1382,6 +1382,14 @@ app.get("/courses/:id/average", async (req, res) => {
   for (const t of tests) sum += t.outOf === 0 ? 0 : (t.mark / t.outOf) * 100;
   res.json({ courseId, testCount: tests.length, averagePercent: sum / tests.length });
 });
+app.post("/admin/remove-legacy-ids", async (req, res) => {
+  await Teacher.updateMany({}, { $unset: { id: "" } });
+  await Course.updateMany({}, { $unset: { id: "" } });
+  await Student.updateMany({}, { $unset: { id: "" } });
+  await Test.updateMany({}, { $unset: { id: "" } });
+  res.json({ message: "✅ Removed legacy numeric id fields" });
+});
+
 
 // -------------------- START --------------------
 const PORT = process.env.PORT || 3000;
