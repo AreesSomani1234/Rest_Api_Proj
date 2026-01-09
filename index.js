@@ -455,9 +455,455 @@
 // })
 // index.js (MongoDB version - NO JSON FILES)
 
+// import "dotenv/config";
+// import express from "express";
+// import mongoose from "mongoose";
+
+// const app = express();
+// app.use(express.json());
+
+// // -------------------- DB CONNECT --------------------
+// async function connectDB() {
+//   if (!process.env.MONGODB_URI) {
+//     throw new Error("Missing MONGODB_URI in environment variables (.env or Render)");
+//   }
+//   await mongoose.connect(process.env.MONGODB_URI);
+//   console.log("✅ MongoDB connected");
+// }
+
+// // -------------------- HELPERS --------------------
+// function requireObjectId(value, res, label = "_id") {
+//   if (!mongoose.Types.ObjectId.isValid(value)) {
+//     res.status(400).json({ error: `Invalid ${label}` });
+//     return null;
+//   }
+//   return value;
+// }
+
+// // -------------------- SCHEMAS / MODELS --------------------
+// // IMPORTANT: 3rd parameter forces collection name to match Atlas collection exactly
+// const Teacher = mongoose.model(
+//   "Teacher",
+//   new mongoose.Schema(
+//     {
+//       firstName: { type: String, required: true },
+//       lastName: { type: String, required: true },
+//       email: { type: String, required: true },
+//       department: { type: String, required: true },
+//       room: { type: String, required: true },
+//     },
+//     { versionKey: false }
+//   ),
+//   "teachers"
+// );
+
+// const Course = mongoose.model(
+//   "Course",
+//   new mongoose.Schema(
+//     {
+//       code: { type: String, required: true },
+//       name: { type: String, required: true },
+
+//       // relationship field LEFT AS-IS (you said later)
+//       teacherId: { type: Number, required: true },
+
+//       semester: { type: String, required: true },
+//       room: { type: String, required: true },
+//       schedule: { type: String, default: "" },
+//     },
+//     { versionKey: false }
+//   ),
+//   "courses"
+// );
+
+// const Student = mongoose.model(
+//   "Student",
+//   new mongoose.Schema(
+//     {
+//       firstName: { type: String, required: true },
+//       lastName: { type: String, required: true },
+//       grade: { type: Number, required: true },
+//       studentNumber: { type: String, required: true },
+//       homeroom: { type: String, default: "" },
+//     },
+//     { versionKey: false }
+//   ),
+//   "students"
+// );
+
+// const Test = mongoose.model(
+//   "Test",
+//   new mongoose.Schema(
+//     {
+//       // relationship fields LEFT AS-IS (you said later)
+//       studentId: { type: Number, required: true },
+//       courseId: { type: Number, required: true },
+
+//       testName: { type: String, required: true },
+//       date: { type: String, required: true },
+//       mark: { type: Number, required: true },
+//       outOf: { type: Number, required: true },
+//       weight: { type: Number, default: 0 },
+//     },
+//     { versionKey: false }
+//   ),
+//   "tests"
+// );
+
+// // -------------------- TEACHERS CRUD --------------------
+// app.get("/teachers", async (req, res) => {
+//   res.json(await Teacher.find());
+// });
+
+// app.get("/teachers/:id", async (req, res) => {
+//   const id = requireObjectId(req.params.id, res, "teacher _id");
+//   if (!id) return;
+
+//   const teacher = await Teacher.findById(id);
+//   if (!teacher) return res.status(404).json({ error: "Teacher not found" });
+
+//   res.json(teacher);
+// });
+
+// app.post("/teachers", async (req, res) => {
+//   const { firstName, lastName, email, department, room } = req.body;
+//   if (!firstName || !lastName || !email || !department || !room) {
+//     return res.status(400).json({ error: "Missing required fields" });
+//   }
+
+//   // NO numeric id anymore
+//   const created = await Teacher.create({ firstName, lastName, email, department, room });
+//   res.status(201).json(created);
+// });
+
+// app.put("/teachers/:id", async (req, res) => {
+//   const id = requireObjectId(req.params.id, res, "teacher _id");
+//   if (!id) return;
+
+//   const allowed = ["firstName", "lastName", "email", "department", "room"];
+//   const hasAllowed = Object.keys(req.body).some((k) => allowed.includes(k));
+//   if (!hasAllowed) return res.status(400).json({ error: "No valid fields to update" });
+
+//   const updated = await Teacher.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+//   if (!updated) return res.status(404).json({ error: "Teacher not found" });
+
+//   res.json(updated);
+// });
+
+// app.delete("/teachers/:id", async (req, res) => {
+//   const id = requireObjectId(req.params.id, res, "teacher _id");
+//   if (!id) return;
+
+//   // Relationship check LEFT AS-IS. (Will likely be wrong until you convert relationships)
+//   // Keeping it because you had it before.
+//   const hasCourse = await Course.exists({ teacherId: id });
+//   if (hasCourse) {
+//     return res.status(400).json({ error: "Cannot delete teacher who is still assigned to a course" });
+//   }
+
+//   const deleted = await Teacher.findByIdAndDelete(id);
+//   if (!deleted) return res.status(404).json({ error: "Teacher not found" });
+
+//   res.json({ message: "Teacher deleted" });
+// });
+
+// // -------------------- COURSES CRUD --------------------
+// app.get("/courses", async (req, res) => {
+//   res.json(await Course.find());
+// });
+
+// app.get("/courses/:id", async (req, res) => {
+//   const id = requireObjectId(req.params.id, res, "course _id");
+//   if (!id) return;
+
+//   const course = await Course.findById(id);
+//   if (!course) return res.status(404).json({ error: "Course not found" });
+
+//   res.json(course);
+// });
+
+// app.post("/courses", async (req, res) => {
+//   const { code, name, teacherId, semester, room, schedule } = req.body;
+//   if (!code || !name || teacherId === undefined || !semester || !room) {
+//     return res.status(400).json({ error: "Missing required fields" });
+//   }
+
+//   // Relationship validation LEFT AS-IS (still checks old numeric id; likely needs later conversion)
+//   // const teacherExists = await Teacher.exists({ id: Number(teacherId) });
+
+//   const created = await Course.create({
+//     code,
+//     name,
+//     teacherId: Number(teacherId),
+//     semester,
+//     room,
+//     schedule: schedule ?? "",
+//   });
+
+//   res.status(201).json(created);
+// });
+
+// app.put("/courses/:id", async (req, res) => {
+//   const id = requireObjectId(req.params.id, res, "course _id");
+//   if (!id) return;
+
+//   const allowed = ["code", "name", "teacherId", "semester", "room", "schedule"];
+//   const hasAllowed = Object.keys(req.body).some((k) => allowed.includes(k));
+//   if (!hasAllowed) return res.status(400).json({ error: "No valid fields to update" });
+
+//   if (req.body.teacherId !== undefined) req.body.teacherId = Number(req.body.teacherId);
+
+//   const updated = await Course.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+//   if (!updated) return res.status(404).json({ error: "Course not found" });
+
+//   res.json(updated);
+// });
+
+// app.delete("/courses/:id", async (req, res) => {
+//   const id = requireObjectId(req.params.id, res, "course _id");
+//   if (!id) return;
+
+//   // Relationship check LEFT AS-IS (tests still store numeric courseId)
+//   const hasTests = await Test.exists({ courseId: id });
+//   if (hasTests) return res.status(400).json({ error: "Cannot delete course that has tests" });
+
+//   const deleted = await Course.findByIdAndDelete(id);
+//   if (!deleted) return res.status(404).json({ error: "Course not found" });
+
+//   res.json({ message: "Course deleted" });
+// });
+
+// // -------------------- STUDENTS CRUD --------------------
+// app.get("/students", async (req, res) => {
+//   res.json(await Student.find());
+// });
+
+// app.get("/students/:id", async (req, res) => {
+//   const id = requireObjectId(req.params.id, res, "student _id");
+//   if (!id) return;
+
+//   const student = await Student.findById(id);
+//   if (!student) return res.status(404).json({ error: "Student not found" });
+
+//   res.json(student);
+// });
+
+// app.post("/students", async (req, res) => {
+//   const { firstName, lastName, grade, studentNumber, homeroom } = req.body;
+//   if (!firstName || !lastName || grade === undefined || !studentNumber) {
+//     return res.status(400).json({ error: "Missing required fields" });
+//   }
+
+//   const created = await Student.create({
+//     firstName,
+//     lastName,
+//     grade: Number(grade),
+//     studentNumber,
+//     homeroom: homeroom ?? "",
+//   });
+
+//   res.status(201).json(created);
+// });
+
+// app.put("/students/:id", async (req, res) => {
+//   const id = requireObjectId(req.params.id, res, "student _id");
+//   if (!id) return;
+
+//   const allowed = ["firstName", "lastName", "grade", "studentNumber", "homeroom"];
+//   const hasAllowed = Object.keys(req.body).some((k) => allowed.includes(k));
+//   if (!hasAllowed) return res.status(400).json({ error: "No valid fields to update" });
+
+//   if (req.body.grade !== undefined) req.body.grade = Number(req.body.grade);
+
+//   const updated = await Student.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+//   if (!updated) return res.status(404).json({ error: "Student not found" });
+
+//   res.json(updated);
+// });
+
+// app.delete("/students/:id", async (req, res) => {
+//   const id = requireObjectId(req.params.id, res, "student _id");
+//   if (!id) return;
+
+//   // Relationship check LEFT AS-IS
+//   const hasTests = await Test.exists({ studentId: id });
+//   if (hasTests) return res.status(400).json({ error: "Cannot delete student that still has tests" });
+
+//   const deleted = await Student.findByIdAndDelete(id);
+//   if (!deleted) return res.status(404).json({ error: "Student not found" });
+
+//   res.json({ message: "Student deleted" });
+// });
+
+// // -------------------- TESTS CRUD --------------------
+// app.get("/tests", async (req, res) => {
+//   res.json(await Test.find());
+// });
+
+// app.get("/tests/:id", async (req, res) => {
+//   const id = requireObjectId(req.params.id, res, "test _id");
+//   if (!id) return;
+
+//   const test = await Test.findById(id);
+//   if (!test) return res.status(404).json({ error: "Test not found" });
+
+//   res.json(test);
+// });
+
+// app.post("/tests", async (req, res) => {
+//   const { studentId, courseId, testName, date, mark, outOf, weight } = req.body;
+
+//   if (
+//     studentId === undefined ||
+//     courseId === undefined ||
+//     !testName ||
+//     !date ||
+//     mark === undefined ||
+//     outOf === undefined
+//   ) {
+//     return res.status(400).json({ error: "Missing required fields" });
+//   }
+
+//   const created = await Test.create({
+//     studentId: Number(studentId),
+//     courseId: Number(courseId),
+//     testName,
+//     date,
+//     mark: Number(mark),
+//     outOf: Number(outOf),
+//     weight: weight !== undefined ? Number(weight) : 0,
+//   });
+
+//   res.status(201).json(created);
+// });
+
+// app.put("/tests/:id", async (req, res) => {
+//   const id = requireObjectId(req.params.id, res, "test _id");
+//   if (!id) return;
+
+//   const allowed = ["studentId", "courseId", "testName", "date", "mark", "outOf", "weight"];
+//   const hasAllowed = Object.keys(req.body).some((k) => allowed.includes(k));
+//   if (!hasAllowed) return res.status(400).json({ error: "No valid fields to update" });
+
+//   if (req.body.studentId !== undefined) req.body.studentId = Number(req.body.studentId);
+//   if (req.body.courseId !== undefined) req.body.courseId = Number(req.body.courseId);
+//   if (req.body.mark !== undefined) req.body.mark = Number(req.body.mark);
+//   if (req.body.outOf !== undefined) req.body.outOf = Number(req.body.outOf);
+//   if (req.body.weight !== undefined) req.body.weight = Number(req.body.weight);
+
+//   const updated = await Test.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+//   if (!updated) return res.status(404).json({ error: "Test not found" });
+
+//   res.json(updated);
+// });
+
+// app.delete("/tests/:id", async (req, res) => {
+//   const id = requireObjectId(req.params.id, res, "test _id");
+//   if (!id) return;
+
+//   const deleted = await Test.findByIdAndDelete(id);
+//   if (!deleted) return res.status(404).json({ error: "Test not found" });
+
+//   res.json({ message: "Test deleted" });
+// });
+
+// // -------------------- EXTRA QUERY ROUTES (by Mongo _id for the URL) --------------------
+
+// // All tests for a student (student URL param is student _id)
+// app.get("/students/:id/tests", async (req, res) => {
+//   const studentMongoId = requireObjectId(req.params.id, res, "student _id");
+//   if (!studentMongoId) return;
+
+//   // NOTE: This will only work correctly AFTER you convert Test.studentId to store student _id.
+//   const studentExists = await Student.exists({ _id: studentMongoId });
+//   if (!studentExists) return res.status(404).json({ error: "Student not found" });
+
+//   const studentTests = await Test.find({ studentId: studentMongoId });
+//   res.json(studentTests);
+// });
+
+// // All tests for a course (course URL param is course _id)
+// app.get("/courses/:id/tests", async (req, res) => {
+//   const courseMongoId = requireObjectId(req.params.id, res, "course _id");
+//   if (!courseMongoId) return;
+
+//   // NOTE: This will only work correctly AFTER you convert Test.courseId to store course _id.
+//   const courseExists = await Course.exists({ _id: courseMongoId });
+//   if (!courseExists) return res.status(404).json({ error: "Course not found" });
+
+//   const courseTests = await Test.find({ courseId: courseMongoId });
+//   res.json(courseTests);
+// });
+
+// // Average for a student
+// app.get("/students/:id/average", async (req, res) => {
+//   const studentMongoId = requireObjectId(req.params.id, res, "student _id");
+//   if (!studentMongoId) return;
+
+//   const studentExists = await Student.exists({ _id: studentMongoId });
+//   if (!studentExists) return res.status(404).json({ error: "Student not found" });
+
+//   const studentTests = await Test.find({ studentId: studentMongoId });
+
+//   if (studentTests.length === 0) {
+//     return res.json({ studentId: studentMongoId, testCount: 0, averagePercent: 0 });
+//   }
+
+//   let sum = 0;
+//   for (const t of studentTests) {
+//     const percent = t.outOf === 0 ? 0 : (t.mark / t.outOf) * 100;
+//     sum += percent;
+//   }
+//   const averagePercent = sum / studentTests.length;
+
+//   res.json({ studentId: studentMongoId, testCount: studentTests.length, averagePercent });
+// });
+
+// // Average for a course
+// app.get("/courses/:id/average", async (req, res) => {
+//   const courseMongoId = requireObjectId(req.params.id, res, "course _id");
+//   if (!courseMongoId) return;
+
+//   const courseExists = await Course.exists({ _id: courseMongoId });
+//   if (!courseExists) return res.status(404).json({ error: "Course not found" });
+
+//   const courseTests = await Test.find({ courseId: courseMongoId });
+
+//   if (courseTests.length === 0) {
+//     return res.json({ courseId: courseMongoId, testCount: 0, averagePercent: 0 });
+//   }
+
+//   let sum = 0;
+//   for (const t of courseTests) {
+//     const percent = t.outOf === 0 ? 0 : (t.mark / t.outOf) * 100;
+//     sum += percent;
+//   }
+//   const averagePercent = sum / courseTests.length;
+
+//   res.json({ courseId: courseMongoId, testCount: courseTests.length, averagePercent });
+// });
+
+// // -------------------- START --------------------
+// const PORT = process.env.PORT || 3000;
+
+// connectDB()
+//   .then(() => {
+//     app.listen(PORT, () => console.log(`✅ Server listening on http://localhost:${PORT}`));
+//   })
+//   .catch((err) => {
+//     console.error("❌ Failed to start server:", err.message);
+//     process.exit(1);
+//   });
+
+
+
+
+/////
 import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";
+import fs from "fs/promises";
+import path from "path";
 
 const app = express();
 app.use(express.json());
@@ -480,17 +926,24 @@ function requireObjectId(value, res, label = "_id") {
   return value;
 }
 
+function pickAllowed(body, allowed) {
+  const out = {};
+  for (const k of Object.keys(body)) {
+    if (allowed.includes(k)) out[k] = body[k];
+  }
+  return out;
+}
+
 // -------------------- SCHEMAS / MODELS --------------------
-// IMPORTANT: 3rd parameter forces collection name to match Atlas collection exactly
 const Teacher = mongoose.model(
   "Teacher",
   new mongoose.Schema(
     {
       firstName: { type: String, required: true },
       lastName: { type: String, required: true },
-      email: { type: String, required: true },
+      email: { type: String, required: true, unique: true },
       department: { type: String, required: true },
-      room: { type: String, required: true },
+      room: { type: String, required: true }
     },
     { versionKey: false }
   ),
@@ -501,15 +954,12 @@ const Course = mongoose.model(
   "Course",
   new mongoose.Schema(
     {
-      code: { type: String, required: true },
+      code: { type: String, required: true, unique: true },
       name: { type: String, required: true },
-
-      // relationship field LEFT AS-IS (you said later)
-      teacherId: { type: Number, required: true },
-
+      teacherId: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher", required: true },
       semester: { type: String, required: true },
       room: { type: String, required: true },
-      schedule: { type: String, default: "" },
+      schedule: { type: String, default: "" }
     },
     { versionKey: false }
   ),
@@ -523,8 +973,8 @@ const Student = mongoose.model(
       firstName: { type: String, required: true },
       lastName: { type: String, required: true },
       grade: { type: Number, required: true },
-      studentNumber: { type: String, required: true },
-      homeroom: { type: String, default: "" },
+      studentNumber: { type: String, required: true, unique: true },
+      homeroom: { type: String, default: "" }
     },
     { versionKey: false }
   ),
@@ -535,34 +985,116 @@ const Test = mongoose.model(
   "Test",
   new mongoose.Schema(
     {
-      // relationship fields LEFT AS-IS (you said later)
-      studentId: { type: Number, required: true },
-      courseId: { type: Number, required: true },
-
+      studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true },
+      courseId: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
       testName: { type: String, required: true },
       date: { type: String, required: true },
       mark: { type: Number, required: true },
       outOf: { type: Number, required: true },
-      weight: { type: Number, default: 0 },
+      weight: { type: Number, default: 0 }
     },
     { versionKey: false }
   ),
   "tests"
 );
 
-// -------------------- TEACHERS CRUD --------------------
-app.get("/teachers", async (req, res) => {
-  res.json(await Teacher.find());
+// -------------------- SEED (RESET + LOAD JSON) --------------------
+// Reads teachers.json, students.json, courses.json, tests.json from same folder as index.js
+async function readJsonFile(filename) {
+  const full = path.join(process.cwd(), filename);
+  const raw = await fs.readFile(full, "utf-8");
+  return JSON.parse(raw);
+}
+
+async function resetAndSeed() {
+  const teachersJson = await readJsonFile("teachers.json");
+  const studentsJson = await readJsonFile("students.json");
+  const coursesJson = await readJsonFile("courses.json");
+  const testsJson = await readJsonFile("tests.json");
+
+  // Hard reset so you never get duplicates / mixed old numeric data
+  await Test.deleteMany({});
+  await Course.deleteMany({});
+  await Student.deleteMany({});
+  await Teacher.deleteMany({});
+
+  const teachers = await Teacher.insertMany(teachersJson);
+  const students = await Student.insertMany(studentsJson);
+
+  // Lookup maps for relationships
+  const teacherByEmail = new Map(teachers.map(t => [t.email, t]));
+  const studentByNumber = new Map(students.map(s => [s.studentNumber, s]));
+
+  // Create courses with teacherId ObjectId (teacherEmail -> teacherId)
+  const coursesToInsert = coursesJson.map(c => {
+    const teacher = teacherByEmail.get(c.teacherEmail);
+    if (!teacher) {
+      throw new Error(`Seed error: course ${c.code} teacherEmail not found: ${c.teacherEmail}`);
+    }
+    return {
+      code: c.code,
+      name: c.name,
+      teacherId: teacher._id,
+      semester: c.semester,
+      room: c.room,
+      schedule: c.schedule ?? ""
+    };
+  });
+
+  const courses = await Course.insertMany(coursesToInsert);
+  const courseByCode = new Map(courses.map(c => [c.code, c]));
+
+  // Create tests with studentId/courseId ObjectIds (studentNumber/courseCode -> _id)
+  const testsToInsert = testsJson.map(t => {
+    const student = studentByNumber.get(t.studentNumber);
+    if (!student) {
+      throw new Error(`Seed error: test studentNumber not found: ${t.studentNumber}`);
+    }
+    const course = courseByCode.get(t.courseCode);
+    if (!course) {
+      throw new Error(`Seed error: test courseCode not found: ${t.courseCode}`);
+    }
+    return {
+      studentId: student._id,
+      courseId: course._id,
+      testName: t.testName,
+      date: t.date,
+      mark: Number(t.mark),
+      outOf: Number(t.outOf),
+      weight: t.weight !== undefined ? Number(t.weight) : 0
+    };
+  });
+
+  await Test.insertMany(testsToInsert);
+
+  return {
+    teachers: teachers.length,
+    students: students.length,
+    courses: courses.length,
+    tests: testsToInsert.length
+  };
+}
+
+// Call this once in Postman to reset/seed:
+// POST http://localhost:3000/seed/reset
+app.post("/seed/reset", async (req, res) => {
+  try {
+    const result = await resetAndSeed();
+    res.json({ message: "✅ Database reset + seeded", ...result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
+
+// -------------------- TEACHERS CRUD --------------------
+app.get("/teachers", async (req, res) => res.json(await Teacher.find()));
 
 app.get("/teachers/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "teacher _id");
   if (!id) return;
-
-  const teacher = await Teacher.findById(id);
-  if (!teacher) return res.status(404).json({ error: "Teacher not found" });
-
-  res.json(teacher);
+  const doc = await Teacher.findById(id);
+  if (!doc) return res.status(404).json({ error: "Teacher not found" });
+  res.json(doc);
 });
 
 app.post("/teachers", async (req, res) => {
@@ -570,8 +1102,6 @@ app.post("/teachers", async (req, res) => {
   if (!firstName || !lastName || !email || !department || !room) {
     return res.status(400).json({ error: "Missing required fields" });
   }
-
-  // NO numeric id anymore
   const created = await Teacher.create({ firstName, lastName, email, department, room });
   res.status(201).json(created);
 });
@@ -580,13 +1110,11 @@ app.put("/teachers/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "teacher _id");
   if (!id) return;
 
-  const allowed = ["firstName", "lastName", "email", "department", "room"];
-  const hasAllowed = Object.keys(req.body).some((k) => allowed.includes(k));
-  if (!hasAllowed) return res.status(400).json({ error: "No valid fields to update" });
+  const update = pickAllowed(req.body, ["firstName", "lastName", "email", "department", "room"]);
+  if (Object.keys(update).length === 0) return res.status(400).json({ error: "No valid fields to update" });
 
-  const updated = await Teacher.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+  const updated = await Teacher.findByIdAndUpdate(id, update, { new: true, runValidators: true });
   if (!updated) return res.status(404).json({ error: "Teacher not found" });
-
   res.json(updated);
 });
 
@@ -594,52 +1122,41 @@ app.delete("/teachers/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "teacher _id");
   if (!id) return;
 
-  // Relationship check LEFT AS-IS. (Will likely be wrong until you convert relationships)
-  // Keeping it because you had it before.
   const hasCourse = await Course.exists({ teacherId: id });
-  if (hasCourse) {
-    return res.status(400).json({ error: "Cannot delete teacher who is still assigned to a course" });
-  }
+  if (hasCourse) return res.status(400).json({ error: "Cannot delete teacher who is still assigned to a course" });
 
   const deleted = await Teacher.findByIdAndDelete(id);
   if (!deleted) return res.status(404).json({ error: "Teacher not found" });
-
   res.json({ message: "Teacher deleted" });
 });
 
 // -------------------- COURSES CRUD --------------------
 app.get("/courses", async (req, res) => {
-  res.json(await Course.find());
+  const courses = await Course.find().populate("teacherId");
+  res.json(courses);
 });
 
 app.get("/courses/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "course _id");
   if (!id) return;
-
-  const course = await Course.findById(id);
+  const course = await Course.findById(id).populate("teacherId");
   if (!course) return res.status(404).json({ error: "Course not found" });
-
   res.json(course);
 });
 
 app.post("/courses", async (req, res) => {
   const { code, name, teacherId, semester, room, schedule } = req.body;
-  if (!code || !name || teacherId === undefined || !semester || !room) {
+  if (!code || !name || !teacherId || !semester || !room) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  // Relationship validation LEFT AS-IS (still checks old numeric id; likely needs later conversion)
-  // const teacherExists = await Teacher.exists({ id: Number(teacherId) });
+  const tId = requireObjectId(teacherId, res, "teacherId");
+  if (!tId) return;
 
-  const created = await Course.create({
-    code,
-    name,
-    teacherId: Number(teacherId),
-    semester,
-    room,
-    schedule: schedule ?? "",
-  });
+  const teacherExists = await Teacher.exists({ _id: tId });
+  if (!teacherExists) return res.status(400).json({ error: "teacherId does not match a teacher" });
 
+  const created = await Course.create({ code, name, teacherId: tId, semester, room, schedule: schedule ?? "" });
   res.status(201).json(created);
 });
 
@@ -647,15 +1164,19 @@ app.put("/courses/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "course _id");
   if (!id) return;
 
-  const allowed = ["code", "name", "teacherId", "semester", "room", "schedule"];
-  const hasAllowed = Object.keys(req.body).some((k) => allowed.includes(k));
-  if (!hasAllowed) return res.status(400).json({ error: "No valid fields to update" });
+  const update = pickAllowed(req.body, ["code", "name", "teacherId", "semester", "room", "schedule"]);
+  if (Object.keys(update).length === 0) return res.status(400).json({ error: "No valid fields to update" });
 
-  if (req.body.teacherId !== undefined) req.body.teacherId = Number(req.body.teacherId);
+  if (update.teacherId !== undefined) {
+    const tId = requireObjectId(update.teacherId, res, "teacherId");
+    if (!tId) return;
+    const teacherExists = await Teacher.exists({ _id: tId });
+    if (!teacherExists) return res.status(400).json({ error: "teacherId does not match a teacher" });
+    update.teacherId = tId;
+  }
 
-  const updated = await Course.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+  const updated = await Course.findByIdAndUpdate(id, update, { new: true, runValidators: true });
   if (!updated) return res.status(404).json({ error: "Course not found" });
-
   res.json(updated);
 });
 
@@ -663,29 +1184,23 @@ app.delete("/courses/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "course _id");
   if (!id) return;
 
-  // Relationship check LEFT AS-IS (tests still store numeric courseId)
   const hasTests = await Test.exists({ courseId: id });
   if (hasTests) return res.status(400).json({ error: "Cannot delete course that has tests" });
 
   const deleted = await Course.findByIdAndDelete(id);
   if (!deleted) return res.status(404).json({ error: "Course not found" });
-
   res.json({ message: "Course deleted" });
 });
 
 // -------------------- STUDENTS CRUD --------------------
-app.get("/students", async (req, res) => {
-  res.json(await Student.find());
-});
+app.get("/students", async (req, res) => res.json(await Student.find()));
 
 app.get("/students/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "student _id");
   if (!id) return;
-
-  const student = await Student.findById(id);
-  if (!student) return res.status(404).json({ error: "Student not found" });
-
-  res.json(student);
+  const doc = await Student.findById(id);
+  if (!doc) return res.status(404).json({ error: "Student not found" });
+  res.json(doc);
 });
 
 app.post("/students", async (req, res) => {
@@ -693,15 +1208,13 @@ app.post("/students", async (req, res) => {
   if (!firstName || !lastName || grade === undefined || !studentNumber) {
     return res.status(400).json({ error: "Missing required fields" });
   }
-
   const created = await Student.create({
     firstName,
     lastName,
     grade: Number(grade),
     studentNumber,
-    homeroom: homeroom ?? "",
+    homeroom: homeroom ?? ""
   });
-
   res.status(201).json(created);
 });
 
@@ -709,15 +1222,12 @@ app.put("/students/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "student _id");
   if (!id) return;
 
-  const allowed = ["firstName", "lastName", "grade", "studentNumber", "homeroom"];
-  const hasAllowed = Object.keys(req.body).some((k) => allowed.includes(k));
-  if (!hasAllowed) return res.status(400).json({ error: "No valid fields to update" });
+  const update = pickAllowed(req.body, ["firstName", "lastName", "grade", "studentNumber", "homeroom"]);
+  if (Object.keys(update).length === 0) return res.status(400).json({ error: "No valid fields to update" });
+  if (update.grade !== undefined) update.grade = Number(update.grade);
 
-  if (req.body.grade !== undefined) req.body.grade = Number(req.body.grade);
-
-  const updated = await Student.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+  const updated = await Student.findByIdAndUpdate(id, update, { new: true, runValidators: true });
   if (!updated) return res.status(404).json({ error: "Student not found" });
-
   res.json(updated);
 });
 
@@ -725,53 +1235,55 @@ app.delete("/students/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "student _id");
   if (!id) return;
 
-  // Relationship check LEFT AS-IS
   const hasTests = await Test.exists({ studentId: id });
   if (hasTests) return res.status(400).json({ error: "Cannot delete student that still has tests" });
 
   const deleted = await Student.findByIdAndDelete(id);
   if (!deleted) return res.status(404).json({ error: "Student not found" });
-
   res.json({ message: "Student deleted" });
 });
 
 // -------------------- TESTS CRUD --------------------
 app.get("/tests", async (req, res) => {
-  res.json(await Test.find());
+  const tests = await Test.find().populate("studentId").populate("courseId");
+  res.json(tests);
 });
 
 app.get("/tests/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "test _id");
   if (!id) return;
 
-  const test = await Test.findById(id);
+  const test = await Test.findById(id).populate("studentId").populate("courseId");
   if (!test) return res.status(404).json({ error: "Test not found" });
-
   res.json(test);
 });
 
 app.post("/tests", async (req, res) => {
   const { studentId, courseId, testName, date, mark, outOf, weight } = req.body;
 
-  if (
-    studentId === undefined ||
-    courseId === undefined ||
-    !testName ||
-    !date ||
-    mark === undefined ||
-    outOf === undefined
-  ) {
+  if (!studentId || !courseId || !testName || !date || mark === undefined || outOf === undefined) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
+  const sId = requireObjectId(studentId, res, "studentId");
+  if (!sId) return;
+  const cId = requireObjectId(courseId, res, "courseId");
+  if (!cId) return;
+
+  const studentExists = await Student.exists({ _id: sId });
+  const courseExists = await Course.exists({ _id: cId });
+  if (!studentExists || !courseExists) {
+    return res.status(400).json({ error: "studentId or courseId does not match an existing record" });
+  }
+
   const created = await Test.create({
-    studentId: Number(studentId),
-    courseId: Number(courseId),
+    studentId: sId,
+    courseId: cId,
     testName,
     date,
     mark: Number(mark),
     outOf: Number(outOf),
-    weight: weight !== undefined ? Number(weight) : 0,
+    weight: weight !== undefined ? Number(weight) : 0
   });
 
   res.status(201).json(created);
@@ -781,19 +1293,31 @@ app.put("/tests/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "test _id");
   if (!id) return;
 
-  const allowed = ["studentId", "courseId", "testName", "date", "mark", "outOf", "weight"];
-  const hasAllowed = Object.keys(req.body).some((k) => allowed.includes(k));
-  if (!hasAllowed) return res.status(400).json({ error: "No valid fields to update" });
+  const update = pickAllowed(req.body, ["studentId", "courseId", "testName", "date", "mark", "outOf", "weight"]);
+  if (Object.keys(update).length === 0) return res.status(400).json({ error: "No valid fields to update" });
 
-  if (req.body.studentId !== undefined) req.body.studentId = Number(req.body.studentId);
-  if (req.body.courseId !== undefined) req.body.courseId = Number(req.body.courseId);
-  if (req.body.mark !== undefined) req.body.mark = Number(req.body.mark);
-  if (req.body.outOf !== undefined) req.body.outOf = Number(req.body.outOf);
-  if (req.body.weight !== undefined) req.body.weight = Number(req.body.weight);
+  if (update.studentId !== undefined) {
+    const sId = requireObjectId(update.studentId, res, "studentId");
+    if (!sId) return;
+    const ok = await Student.exists({ _id: sId });
+    if (!ok) return res.status(400).json({ error: "studentId does not match a student" });
+    update.studentId = sId;
+  }
 
-  const updated = await Test.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+  if (update.courseId !== undefined) {
+    const cId = requireObjectId(update.courseId, res, "courseId");
+    if (!cId) return;
+    const ok = await Course.exists({ _id: cId });
+    if (!ok) return res.status(400).json({ error: "courseId does not match a course" });
+    update.courseId = cId;
+  }
+
+  if (update.mark !== undefined) update.mark = Number(update.mark);
+  if (update.outOf !== undefined) update.outOf = Number(update.outOf);
+  if (update.weight !== undefined) update.weight = Number(update.weight);
+
+  const updated = await Test.findByIdAndUpdate(id, update, { new: true, runValidators: true });
   if (!updated) return res.status(404).json({ error: "Test not found" });
-
   res.json(updated);
 });
 
@@ -803,84 +1327,60 @@ app.delete("/tests/:id", async (req, res) => {
 
   const deleted = await Test.findByIdAndDelete(id);
   if (!deleted) return res.status(404).json({ error: "Test not found" });
-
   res.json({ message: "Test deleted" });
 });
 
-// -------------------- EXTRA QUERY ROUTES (by Mongo _id for the URL) --------------------
-
-// All tests for a student (student URL param is student _id)
+// -------------------- EXTRA QUERY ROUTES --------------------
 app.get("/students/:id/tests", async (req, res) => {
-  const studentMongoId = requireObjectId(req.params.id, res, "student _id");
-  if (!studentMongoId) return;
+  const studentId = requireObjectId(req.params.id, res, "student _id");
+  if (!studentId) return;
 
-  // NOTE: This will only work correctly AFTER you convert Test.studentId to store student _id.
-  const studentExists = await Student.exists({ _id: studentMongoId });
-  if (!studentExists) return res.status(404).json({ error: "Student not found" });
+  const exists = await Student.exists({ _id: studentId });
+  if (!exists) return res.status(404).json({ error: "Student not found" });
 
-  const studentTests = await Test.find({ studentId: studentMongoId });
-  res.json(studentTests);
+  const tests = await Test.find({ studentId }).populate("courseId");
+  res.json(tests);
 });
 
-// All tests for a course (course URL param is course _id)
 app.get("/courses/:id/tests", async (req, res) => {
-  const courseMongoId = requireObjectId(req.params.id, res, "course _id");
-  if (!courseMongoId) return;
+  const courseId = requireObjectId(req.params.id, res, "course _id");
+  if (!courseId) return;
 
-  // NOTE: This will only work correctly AFTER you convert Test.courseId to store course _id.
-  const courseExists = await Course.exists({ _id: courseMongoId });
-  if (!courseExists) return res.status(404).json({ error: "Course not found" });
+  const exists = await Course.exists({ _id: courseId });
+  if (!exists) return res.status(404).json({ error: "Course not found" });
 
-  const courseTests = await Test.find({ courseId: courseMongoId });
-  res.json(courseTests);
+  const tests = await Test.find({ courseId }).populate("studentId");
+  res.json(tests);
 });
 
-// Average for a student
 app.get("/students/:id/average", async (req, res) => {
-  const studentMongoId = requireObjectId(req.params.id, res, "student _id");
-  if (!studentMongoId) return;
+  const studentId = requireObjectId(req.params.id, res, "student _id");
+  if (!studentId) return;
 
-  const studentExists = await Student.exists({ _id: studentMongoId });
-  if (!studentExists) return res.status(404).json({ error: "Student not found" });
+  const exists = await Student.exists({ _id: studentId });
+  if (!exists) return res.status(404).json({ error: "Student not found" });
 
-  const studentTests = await Test.find({ studentId: studentMongoId });
-
-  if (studentTests.length === 0) {
-    return res.json({ studentId: studentMongoId, testCount: 0, averagePercent: 0 });
-  }
+  const tests = await Test.find({ studentId });
+  if (tests.length === 0) return res.json({ studentId, testCount: 0, averagePercent: 0 });
 
   let sum = 0;
-  for (const t of studentTests) {
-    const percent = t.outOf === 0 ? 0 : (t.mark / t.outOf) * 100;
-    sum += percent;
-  }
-  const averagePercent = sum / studentTests.length;
-
-  res.json({ studentId: studentMongoId, testCount: studentTests.length, averagePercent });
+  for (const t of tests) sum += t.outOf === 0 ? 0 : (t.mark / t.outOf) * 100;
+  res.json({ studentId, testCount: tests.length, averagePercent: sum / tests.length });
 });
 
-// Average for a course
 app.get("/courses/:id/average", async (req, res) => {
-  const courseMongoId = requireObjectId(req.params.id, res, "course _id");
-  if (!courseMongoId) return;
+  const courseId = requireObjectId(req.params.id, res, "course _id");
+  if (!courseId) return;
 
-  const courseExists = await Course.exists({ _id: courseMongoId });
-  if (!courseExists) return res.status(404).json({ error: "Course not found" });
+  const exists = await Course.exists({ _id: courseId });
+  if (!exists) return res.status(404).json({ error: "Course not found" });
 
-  const courseTests = await Test.find({ courseId: courseMongoId });
-
-  if (courseTests.length === 0) {
-    return res.json({ courseId: courseMongoId, testCount: 0, averagePercent: 0 });
-  }
+  const tests = await Test.find({ courseId });
+  if (tests.length === 0) return res.json({ courseId, testCount: 0, averagePercent: 0 });
 
   let sum = 0;
-  for (const t of courseTests) {
-    const percent = t.outOf === 0 ? 0 : (t.mark / t.outOf) * 100;
-    sum += percent;
-  }
-  const averagePercent = sum / courseTests.length;
-
-  res.json({ courseId: courseMongoId, testCount: courseTests.length, averagePercent });
+  for (const t of tests) sum += t.outOf === 0 ? 0 : (t.mark / t.outOf) * 100;
+  res.json({ courseId, testCount: tests.length, averagePercent: sum / tests.length });
 });
 
 // -------------------- START --------------------
@@ -894,3 +1394,4 @@ connectDB()
     console.error("❌ Failed to start server:", err.message);
     process.exit(1);
   });
+

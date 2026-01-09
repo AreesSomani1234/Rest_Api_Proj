@@ -1,6 +1,5 @@
 [
   {
-    "id": 1,
     "firstName": "Emily",
     "lastName": "Chan",
     "email": "echan@school.ca",
@@ -8,7 +7,6 @@
     "room": "305"
   },
   {
-    "id": 2,
     "firstName": "Robert",
     "lastName": "Singh",
     "email": "rsingh@school.ca",
@@ -16,7 +14,6 @@
     "room": "214"
   },
   {
-    "id": 3,
     "firstName": "Laura",
     "lastName": "Martinez",
     "email": "lmartinez@school.ca",
@@ -24,7 +21,6 @@
     "room": "108"
   },
   {
-    "id": 4,
     "firstName": "Daniel",
     "lastName": "Nguyen",
     "email": "dnguyen@school.ca",
@@ -32,7 +28,6 @@
     "room": "Lab 2"
   },
   {
-    "id": 5,
     "firstName": "Fatima",
     "lastName": "Hassan",
     "email": "fhassan@school.ca",
@@ -40,7 +35,6 @@
     "room": "110"
   },
   {
-    "id": 6,
     "firstName": "Jean",
     "lastName": "Dubois",
     "email": "jdubois@school.ca",
@@ -48,3 +42,4 @@
     "room": "202"
   }
 ]
+

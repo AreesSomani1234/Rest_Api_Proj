@@ -1,8 +1,7 @@
 [
   {
-    "id": 1,
-    "studentId": 11,
-    "courseId": 1,
+    "studentNumber": "2025011",
+    "courseCode": "ICS4U_W",
     "testName": "Unit 1 Test: Programming Basics",
     "date": "2025-02-10",
     "mark": 71,
@@ -10,9 +9,8 @@
     "weight": 20
   },
   {
-    "id": 2,
-    "studentId": 15,
-    "courseId": 1,
+    "studentNumber": "2025015",
+    "courseCode": "ICS4U_W",
     "testName": "Unit 1 Test: Programming Basics",
     "date": "2025-02-10",
     "mark": 86,
@@ -20,9 +18,8 @@
     "weight": 20
   },
   {
-    "id": 3,
-    "studentId": 3,
-    "courseId": 1,
+    "studentNumber": "2025003",
+    "courseCode": "ICS4U_W",
     "testName": "Unit 1 Test: Programming Basics",
     "date": "2025-02-10",
     "mark": 92,
@@ -30,9 +27,8 @@
     "weight": 10
   },
   {
-    "id": 4,
-    "studentId": 7,
-    "courseId": 1,
+    "studentNumber": "2025007",
+    "courseCode": "ICS4U_W",
     "testName": "Unit 2 Test: Arrays",
     "date": "2025-03-05",
     "mark": 63,
@@ -40,9 +36,8 @@
     "weight": 15
   },
   {
-    "id": 5,
-    "studentId": 3,
-    "courseId": 1,
+    "studentNumber": "2025003",
+    "courseCode": "ICS4U_W",
     "testName": "Unit 2 Test: Arrays",
     "date": "2025-03-05",
     "mark": 63,
@@ -50,9 +45,8 @@
     "weight": 10
   },
   {
-    "id": 6,
-    "studentId": 15,
-    "courseId": 1,
+    "studentNumber": "2025015",
+    "courseCode": "ICS4U_W",
     "testName": "Unit 2 Test: Arrays",
     "date": "2025-03-05",
     "mark": 87,
@@ -60,9 +54,8 @@
     "weight": 15
   },
   {
-    "id": 7,
-    "studentId": 15,
-    "courseId": 1,
+    "studentNumber": "2025015",
+    "courseCode": "ICS4U_W",
     "testName": "Unit 3 Test: OOP",
     "date": "2025-04-02",
     "mark": 84,
@@ -70,9 +63,8 @@
     "weight": 10
   },
   {
-    "id": 8,
-    "studentId": 11,
-    "courseId": 1,
+    "studentNumber": "2025011",
+    "courseCode": "ICS4U_W",
     "testName": "Unit 3 Test: OOP",
     "date": "2025-04-02",
     "mark": 76,
@@ -80,9 +72,8 @@
     "weight": 20
   },
   {
-    "id": 9,
-    "studentId": 3,
-    "courseId": 1,
+    "studentNumber": "2025003",
+    "courseCode": "ICS4U_W",
     "testName": "Unit 3 Test: OOP",
     "date": "2025-04-02",
     "mark": 87,
@@ -90,9 +81,8 @@
     "weight": 20
   },
   {
-    "id": 10,
-    "studentId": 3,
-    "courseId": 2,
+    "studentNumber": "2025003",
+    "courseCode": "MHF4U",
     "testName": "Unit 1 Test: Functions",
     "date": "2025-02-12",
     "mark": 76,
@@ -100,9 +90,8 @@
     "weight": 15
   },
   {
-    "id": 11,
-    "studentId": 11,
-    "courseId": 2,
+    "studentNumber": "2025011",
+    "courseCode": "MHF4U",
     "testName": "Unit 1 Test: Functions",
     "date": "2025-02-12",
     "mark": 74,
@@ -110,9 +99,8 @@
     "weight": 20
   },
   {
-    "id": 12,
-    "studentId": 1,
-    "courseId": 2,
+    "studentNumber": "2025001",
+    "courseCode": "MHF4U",
     "testName": "Unit 1 Test: Functions",
     "date": "2025-02-12",
     "mark": 62,
@@ -120,9 +108,8 @@
     "weight": 20
   },
   {
-    "id": 13,
-    "studentId": 8,
-    "courseId": 2,
+    "studentNumber": "2025008",
+    "courseCode": "MHF4U",
     "testName": "Unit 2 Test: Trigonometry",
     "date": "2025-03-10",
     "mark": 89,
@@ -130,9 +117,8 @@
     "weight": 10
   },
   {
-    "id": 14,
-    "studentId": 1,
-    "courseId": 2,
+    "studentNumber": "2025001",
+    "courseCode": "MHF4U",
     "testName": "Unit 2 Test: Trigonometry",
     "date": "2025-03-10",
     "mark": 93,
@@ -140,9 +126,8 @@
     "weight": 15
   },
   {
-    "id": 15,
-    "studentId": 11,
-    "courseId": 2,
+    "studentNumber": "2025011",
+    "courseCode": "MHF4U",
     "testName": "Unit 2 Test: Trigonometry",
     "date": "2025-03-10",
     "mark": 77,
@@ -150,9 +135,8 @@
     "weight": 15
   },
   {
-    "id": 16,
-    "studentId": 2,
-    "courseId": 2,
+    "studentNumber": "2025002",
+    "courseCode": "MHF4U",
     "testName": "Unit 3 Test: Exponents",
     "date": "2025-04-15",
     "mark": 80,
@@ -160,9 +144,8 @@
     "weight": 20
   },
   {
-    "id": 18,
-    "studentId": 3,
-    "courseId": 2,
+    "studentNumber": "2025003",
+    "courseCode": "MHF4U",
     "testName": "Unit 3 Test: Exponents",
     "date": "2025-04-15",
     "mark": 82,
@@ -170,9 +153,8 @@
     "weight": 15
   },
   {
-    "id": 19,
-    "studentId": 1,
-    "courseId": 3,
+    "studentNumber": "2025001",
+    "courseCode": "ENG3U",
     "testName": "Essay Test: Short Stories",
     "date": "2025-02-20",
     "mark": 88,
@@ -180,9 +162,8 @@
     "weight": 20
   },
   {
-    "id": 20,
-    "studentId": 12,
-    "courseId": 3,
+    "studentNumber": "2025012",
+    "courseCode": "ENG3U",
     "testName": "Essay Test: Short Stories",
     "date": "2025-02-20",
     "mark": 79,
@@ -190,9 +171,8 @@
     "weight": 20
   },
   {
-    "id": 21,
-    "studentId": 6,
-    "courseId": 3,
+    "studentNumber": "2025006",
+    "courseCode": "ENG3U",
     "testName": "Essay Test: Short Stories",
     "date": "2025-02-20",
     "mark": 83,
@@ -200,9 +180,8 @@
     "weight": 15
   },
   {
-    "id": 22,
-    "studentId": 1,
-    "courseId": 3,
+    "studentNumber": "2025001",
+    "courseCode": "ENG3U",
     "testName": "Unit Test: Novel Study",
     "date": "2025-04-05",
     "mark": 91,
@@ -210,9 +189,8 @@
     "weight": 20
   },
   {
-    "id": 23,
-    "studentId": 8,
-    "courseId": 3,
+    "studentNumber": "2025008",
+    "courseCode": "ENG3U",
     "testName": "Unit Test: Novel Study",
     "date": "2025-04-05",
     "mark": 78,
@@ -220,9 +198,8 @@
     "weight": 20
   },
   {
-    "id": 24,
-    "studentId": 4,
-    "courseId": 3,
+    "studentNumber": "2025004",
+    "courseCode": "ENG3U",
     "testName": "Unit Test: Novel Study",
     "date": "2025-04-05",
     "mark": 85,
@@ -230,9 +207,8 @@
     "weight": 15
   },
   {
-    "id": 25,
-    "studentId": 2,
-    "courseId": 4,
+    "studentNumber": "2025002",
+    "courseCode": "SBI3U",
     "testName": "Quiz: Cell Biology",
     "date": "2025-03-01",
     "mark": 81,
@@ -240,9 +216,8 @@
     "weight": 10
   },
   {
-    "id": 26,
-    "studentId": 1,
-    "courseId": 1,
+    "studentNumber": "2025001",
+    "courseCode": "ICS4U_W",
     "testName": "Unit 1 Test",
     "date": "2025-01-15",
     "mark": 87,
