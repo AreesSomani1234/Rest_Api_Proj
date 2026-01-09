@@ -1153,21 +1153,35 @@ app.get("/students/:id", async (req, res) => {
 });
 
 app.post("/students", async (req, res) => {
-  const { firstName, lastName, grade, studentNumber, homeroom } = req.body;
-  if (!firstName || !lastName || grade === undefined || !studentNumber) {
-    return res.status(400).json({ error: "Missing required fields" });
+  try {
+    const { firstName, lastName, grade, studentNumber, homeroom } = req.body;
+
+    if (!firstName || !lastName || grade === undefined || !studentNumber) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const created = await Student.create({
+      firstName,
+      lastName,
+      grade: Number(grade),
+      studentNumber,
+      homeroom: homeroom ?? "",
+    });
+
+    return res.status(201).json(created);
+  } catch (err) {
+    // most common: duplicate unique key (studentNumber already exists)
+    if (err?.code === 11000) {
+      return res.status(409).json({
+        error: "Duplicate value",
+        details: err.keyValue, // tells you which field duplicated
+      });
+    }
+
+    return res.status(500).json({ error: err.message });
   }
-
-  const created = await Student.create({
-    firstName,
-    lastName,
-    grade: Number(grade),
-    studentNumber,
-    homeroom: homeroom ?? "",
-  });
-
-  res.status(201).json(created);
 });
+
 
 app.put("/students/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "student _id");
