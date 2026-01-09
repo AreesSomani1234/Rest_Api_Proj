@@ -902,8 +902,6 @@
 import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";
-import fs from "fs/promises";
-import path from "path";
 
 const app = express();
 app.use(express.json());
@@ -934,6 +932,9 @@ function pickAllowed(body, allowed) {
   return out;
 }
 
+// Hide legacy numeric `id` if it exists in old documents
+const HIDE_LEGACY_ID = "-id";
+
 // -------------------- SCHEMAS / MODELS --------------------
 const Teacher = mongoose.model(
   "Teacher",
@@ -943,7 +944,7 @@ const Teacher = mongoose.model(
       lastName: { type: String, required: true },
       email: { type: String, required: true, unique: true },
       department: { type: String, required: true },
-      room: { type: String, required: true }
+      room: { type: String, required: true },
     },
     { versionKey: false }
   ),
@@ -956,10 +957,13 @@ const Course = mongoose.model(
     {
       code: { type: String, required: true, unique: true },
       name: { type: String, required: true },
+
+      // Mongo relationship
       teacherId: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher", required: true },
+
       semester: { type: String, required: true },
       room: { type: String, required: true },
-      schedule: { type: String, default: "" }
+      schedule: { type: String, default: "" },
     },
     { versionKey: false }
   ),
@@ -974,7 +978,7 @@ const Student = mongoose.model(
       lastName: { type: String, required: true },
       grade: { type: Number, required: true },
       studentNumber: { type: String, required: true, unique: true },
-      homeroom: { type: String, default: "" }
+      homeroom: { type: String, default: "" },
     },
     { versionKey: false }
   ),
@@ -985,115 +989,34 @@ const Test = mongoose.model(
   "Test",
   new mongoose.Schema(
     {
+      // Mongo relationships
       studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true },
       courseId: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
+
       testName: { type: String, required: true },
-      date: { type: String, required: true },
+      date: { type: String, required: true }, // keep as string if your teacher wants
       mark: { type: Number, required: true },
       outOf: { type: Number, required: true },
-      weight: { type: Number, default: 0 }
+      weight: { type: Number, default: 0 },
     },
     { versionKey: false }
   ),
   "tests"
 );
 
-// -------------------- SEED (RESET + LOAD JSON) --------------------
-// Reads teachers.json, students.json, courses.json, tests.json from same folder as index.js
-async function readJsonFile(filename) {
-  const full = path.join(process.cwd(), filename);
-  const raw = await fs.readFile(full, "utf-8");
-  return JSON.parse(raw);
-}
-
-async function resetAndSeed() {
-  const teachersJson = await readJsonFile("teachers.json");
-  const studentsJson = await readJsonFile("students.json");
-  const coursesJson = await readJsonFile("courses.json");
-  const testsJson = await readJsonFile("tests.json");
-
-  // Hard reset so you never get duplicates / mixed old numeric data
-  await Test.deleteMany({});
-  await Course.deleteMany({});
-  await Student.deleteMany({});
-  await Teacher.deleteMany({});
-
-  const teachers = await Teacher.insertMany(teachersJson);
-  const students = await Student.insertMany(studentsJson);
-
-  // Lookup maps for relationships
-  const teacherByEmail = new Map(teachers.map(t => [t.email, t]));
-  const studentByNumber = new Map(students.map(s => [s.studentNumber, s]));
-
-  // Create courses with teacherId ObjectId (teacherEmail -> teacherId)
-  const coursesToInsert = coursesJson.map(c => {
-    const teacher = teacherByEmail.get(c.teacherEmail);
-    if (!teacher) {
-      throw new Error(`Seed error: course ${c.code} teacherEmail not found: ${c.teacherEmail}`);
-    }
-    return {
-      code: c.code,
-      name: c.name,
-      teacherId: teacher._id,
-      semester: c.semester,
-      room: c.room,
-      schedule: c.schedule ?? ""
-    };
-  });
-
-  const courses = await Course.insertMany(coursesToInsert);
-  const courseByCode = new Map(courses.map(c => [c.code, c]));
-
-  // Create tests with studentId/courseId ObjectIds (studentNumber/courseCode -> _id)
-  const testsToInsert = testsJson.map(t => {
-    const student = studentByNumber.get(t.studentNumber);
-    if (!student) {
-      throw new Error(`Seed error: test studentNumber not found: ${t.studentNumber}`);
-    }
-    const course = courseByCode.get(t.courseCode);
-    if (!course) {
-      throw new Error(`Seed error: test courseCode not found: ${t.courseCode}`);
-    }
-    return {
-      studentId: student._id,
-      courseId: course._id,
-      testName: t.testName,
-      date: t.date,
-      mark: Number(t.mark),
-      outOf: Number(t.outOf),
-      weight: t.weight !== undefined ? Number(t.weight) : 0
-    };
-  });
-
-  await Test.insertMany(testsToInsert);
-
-  return {
-    teachers: teachers.length,
-    students: students.length,
-    courses: courses.length,
-    tests: testsToInsert.length
-  };
-}
-
-// Call this once in Postman to reset/seed:
-// POST http://localhost:3000/seed/reset
-app.post("/seed/reset", async (req, res) => {
-  try {
-    const result = await resetAndSeed();
-    res.json({ message: "✅ Database reset + seeded", ...result });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // -------------------- TEACHERS CRUD --------------------
-app.get("/teachers", async (req, res) => res.json(await Teacher.find()));
+app.get("/teachers", async (req, res) => {
+  const docs = await Teacher.find().select(HIDE_LEGACY_ID);
+  res.json(docs);
+});
 
 app.get("/teachers/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "teacher _id");
   if (!id) return;
-  const doc = await Teacher.findById(id);
+
+  const doc = await Teacher.findById(id).select(HIDE_LEGACY_ID);
   if (!doc) return res.status(404).json({ error: "Teacher not found" });
+
   res.json(doc);
 });
 
@@ -1102,6 +1025,7 @@ app.post("/teachers", async (req, res) => {
   if (!firstName || !lastName || !email || !department || !room) {
     return res.status(400).json({ error: "Missing required fields" });
   }
+
   const created = await Teacher.create({ firstName, lastName, email, department, room });
   res.status(201).json(created);
 });
@@ -1111,10 +1035,13 @@ app.put("/teachers/:id", async (req, res) => {
   if (!id) return;
 
   const update = pickAllowed(req.body, ["firstName", "lastName", "email", "department", "room"]);
-  if (Object.keys(update).length === 0) return res.status(400).json({ error: "No valid fields to update" });
+  if (Object.keys(update).length === 0) {
+    return res.status(400).json({ error: "No valid fields to update" });
+  }
 
-  const updated = await Teacher.findByIdAndUpdate(id, update, { new: true, runValidators: true });
+  const updated = await Teacher.findByIdAndUpdate(id, update, { new: true, runValidators: true }).select(HIDE_LEGACY_ID);
   if (!updated) return res.status(404).json({ error: "Teacher not found" });
+
   res.json(updated);
 });
 
@@ -1123,25 +1050,30 @@ app.delete("/teachers/:id", async (req, res) => {
   if (!id) return;
 
   const hasCourse = await Course.exists({ teacherId: id });
-  if (hasCourse) return res.status(400).json({ error: "Cannot delete teacher who is still assigned to a course" });
+  if (hasCourse) {
+    return res.status(400).json({ error: "Cannot delete teacher who is still assigned to a course" });
+  }
 
   const deleted = await Teacher.findByIdAndDelete(id);
   if (!deleted) return res.status(404).json({ error: "Teacher not found" });
+
   res.json({ message: "Teacher deleted" });
 });
 
 // -------------------- COURSES CRUD --------------------
 app.get("/courses", async (req, res) => {
-  const courses = await Course.find().populate("teacherId");
-  res.json(courses);
+  const docs = await Course.find().populate("teacherId").select(HIDE_LEGACY_ID);
+  res.json(docs);
 });
 
 app.get("/courses/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "course _id");
   if (!id) return;
-  const course = await Course.findById(id).populate("teacherId");
-  if (!course) return res.status(404).json({ error: "Course not found" });
-  res.json(course);
+
+  const doc = await Course.findById(id).populate("teacherId").select(HIDE_LEGACY_ID);
+  if (!doc) return res.status(404).json({ error: "Course not found" });
+
+  res.json(doc);
 });
 
 app.post("/courses", async (req, res) => {
@@ -1156,7 +1088,15 @@ app.post("/courses", async (req, res) => {
   const teacherExists = await Teacher.exists({ _id: tId });
   if (!teacherExists) return res.status(400).json({ error: "teacherId does not match a teacher" });
 
-  const created = await Course.create({ code, name, teacherId: tId, semester, room, schedule: schedule ?? "" });
+  const created = await Course.create({
+    code,
+    name,
+    teacherId: tId,
+    semester,
+    room,
+    schedule: schedule ?? "",
+  });
+
   res.status(201).json(created);
 });
 
@@ -1170,13 +1110,16 @@ app.put("/courses/:id", async (req, res) => {
   if (update.teacherId !== undefined) {
     const tId = requireObjectId(update.teacherId, res, "teacherId");
     if (!tId) return;
+
     const teacherExists = await Teacher.exists({ _id: tId });
     if (!teacherExists) return res.status(400).json({ error: "teacherId does not match a teacher" });
+
     update.teacherId = tId;
   }
 
-  const updated = await Course.findByIdAndUpdate(id, update, { new: true, runValidators: true });
+  const updated = await Course.findByIdAndUpdate(id, update, { new: true, runValidators: true }).select(HIDE_LEGACY_ID);
   if (!updated) return res.status(404).json({ error: "Course not found" });
+
   res.json(updated);
 });
 
@@ -1189,17 +1132,23 @@ app.delete("/courses/:id", async (req, res) => {
 
   const deleted = await Course.findByIdAndDelete(id);
   if (!deleted) return res.status(404).json({ error: "Course not found" });
+
   res.json({ message: "Course deleted" });
 });
 
 // -------------------- STUDENTS CRUD --------------------
-app.get("/students", async (req, res) => res.json(await Student.find()));
+app.get("/students", async (req, res) => {
+  const docs = await Student.find().select(HIDE_LEGACY_ID);
+  res.json(docs);
+});
 
 app.get("/students/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "student _id");
   if (!id) return;
-  const doc = await Student.findById(id);
+
+  const doc = await Student.findById(id).select(HIDE_LEGACY_ID);
   if (!doc) return res.status(404).json({ error: "Student not found" });
+
   res.json(doc);
 });
 
@@ -1208,13 +1157,15 @@ app.post("/students", async (req, res) => {
   if (!firstName || !lastName || grade === undefined || !studentNumber) {
     return res.status(400).json({ error: "Missing required fields" });
   }
+
   const created = await Student.create({
     firstName,
     lastName,
     grade: Number(grade),
     studentNumber,
-    homeroom: homeroom ?? ""
+    homeroom: homeroom ?? "",
   });
+
   res.status(201).json(created);
 });
 
@@ -1226,8 +1177,9 @@ app.put("/students/:id", async (req, res) => {
   if (Object.keys(update).length === 0) return res.status(400).json({ error: "No valid fields to update" });
   if (update.grade !== undefined) update.grade = Number(update.grade);
 
-  const updated = await Student.findByIdAndUpdate(id, update, { new: true, runValidators: true });
+  const updated = await Student.findByIdAndUpdate(id, update, { new: true, runValidators: true }).select(HIDE_LEGACY_ID);
   if (!updated) return res.status(404).json({ error: "Student not found" });
+
   res.json(updated);
 });
 
@@ -1240,22 +1192,30 @@ app.delete("/students/:id", async (req, res) => {
 
   const deleted = await Student.findByIdAndDelete(id);
   if (!deleted) return res.status(404).json({ error: "Student not found" });
+
   res.json({ message: "Student deleted" });
 });
 
 // -------------------- TESTS CRUD --------------------
 app.get("/tests", async (req, res) => {
-  const tests = await Test.find().populate("studentId").populate("courseId");
-  res.json(tests);
+  const docs = await Test.find()
+    .populate("studentId")
+    .populate("courseId")
+    .select(HIDE_LEGACY_ID);
+  res.json(docs);
 });
 
 app.get("/tests/:id", async (req, res) => {
   const id = requireObjectId(req.params.id, res, "test _id");
   if (!id) return;
 
-  const test = await Test.findById(id).populate("studentId").populate("courseId");
-  if (!test) return res.status(404).json({ error: "Test not found" });
-  res.json(test);
+  const doc = await Test.findById(id)
+    .populate("studentId")
+    .populate("courseId")
+    .select(HIDE_LEGACY_ID);
+
+  if (!doc) return res.status(404).json({ error: "Test not found" });
+  res.json(doc);
 });
 
 app.post("/tests", async (req, res) => {
@@ -1283,7 +1243,7 @@ app.post("/tests", async (req, res) => {
     date,
     mark: Number(mark),
     outOf: Number(outOf),
-    weight: weight !== undefined ? Number(weight) : 0
+    weight: weight !== undefined ? Number(weight) : 0,
   });
 
   res.status(201).json(created);
@@ -1316,8 +1276,9 @@ app.put("/tests/:id", async (req, res) => {
   if (update.outOf !== undefined) update.outOf = Number(update.outOf);
   if (update.weight !== undefined) update.weight = Number(update.weight);
 
-  const updated = await Test.findByIdAndUpdate(id, update, { new: true, runValidators: true });
+  const updated = await Test.findByIdAndUpdate(id, update, { new: true, runValidators: true }).select(HIDE_LEGACY_ID);
   if (!updated) return res.status(404).json({ error: "Test not found" });
+
   res.json(updated);
 });
 
@@ -1327,10 +1288,11 @@ app.delete("/tests/:id", async (req, res) => {
 
   const deleted = await Test.findByIdAndDelete(id);
   if (!deleted) return res.status(404).json({ error: "Test not found" });
+
   res.json({ message: "Test deleted" });
 });
 
-// -------------------- EXTRA QUERY ROUTES --------------------
+// -------------------- EXTRA ROUTES --------------------
 app.get("/students/:id/tests", async (req, res) => {
   const studentId = requireObjectId(req.params.id, res, "student _id");
   if (!studentId) return;
@@ -1338,7 +1300,7 @@ app.get("/students/:id/tests", async (req, res) => {
   const exists = await Student.exists({ _id: studentId });
   if (!exists) return res.status(404).json({ error: "Student not found" });
 
-  const tests = await Test.find({ studentId }).populate("courseId");
+  const tests = await Test.find({ studentId }).populate("courseId").select(HIDE_LEGACY_ID);
   res.json(tests);
 });
 
@@ -1349,7 +1311,7 @@ app.get("/courses/:id/tests", async (req, res) => {
   const exists = await Course.exists({ _id: courseId });
   if (!exists) return res.status(404).json({ error: "Course not found" });
 
-  const tests = await Test.find({ courseId }).populate("studentId");
+  const tests = await Test.find({ courseId }).populate("studentId").select(HIDE_LEGACY_ID);
   res.json(tests);
 });
 
@@ -1382,14 +1344,6 @@ app.get("/courses/:id/average", async (req, res) => {
   for (const t of tests) sum += t.outOf === 0 ? 0 : (t.mark / t.outOf) * 100;
   res.json({ courseId, testCount: tests.length, averagePercent: sum / tests.length });
 });
-app.post("/admin/remove-legacy-ids", async (req, res) => {
-  await Teacher.updateMany({}, { $unset: { id: "" } });
-  await Course.updateMany({}, { $unset: { id: "" } });
-  await Student.updateMany({}, { $unset: { id: "" } });
-  await Test.updateMany({}, { $unset: { id: "" } });
-  res.json({ message: "✅ Removed legacy numeric id fields" });
-});
-
 
 // -------------------- START --------------------
 const PORT = process.env.PORT || 3000;
@@ -1402,4 +1356,3 @@ connectDB()
     console.error("❌ Failed to start server:", err.message);
     process.exit(1);
   });
-
